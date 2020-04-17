@@ -64,4 +64,6 @@ When locating the kernel file for reading in this fashion, one is free to reloca
 
 When building libraries with kernels as components, without surfacing a root path for kernel search, there is an implicit requirement imposed on the build / install trees of downstreams linking to the library. (For eg. the relative path of the kernel files and the final executable consuming the library have to be the same as the kernels and the unit tests of said library.) Depending on your workflow or use-case, this may or may not be acceptable.
 
+> The API is exposed through C++17 std::filesystem::path, because character encoding of paths is platform specific. To maintain a platform agnostic interface, we rely on the abstraction introduced by `std::filesystem::path`, so the user need not be exposed to implementation details such as path encodings (`char` vs. `wchar_t`).
+
 _(Note: the author is aware of the performance implication of using the filestream iterator adapters in constructors as opposed to raw seeking and pre-allocating in file handles, however kernel files more often than not are small enough to consider chosing simplicity over performance.)_
