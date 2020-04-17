@@ -1,6 +1,6 @@
-# Locate kernel file relative to current working directory
+# Locate kernel file relative to executable path
 
-One way to locate and load kernel files at runtime is searching relative to the current working directory. Doing so requires one to copy kernel files to the build and install trees alike. (That is if one does not wish the executable to rely on the source tree, which is not recommended.) When building with CMake specifically, one can instruct the build system to copy this file both for development builds and installs.
+One way to locate and load kernel files at runtime is searching relative to the path of the executable. Doing so requires one to copy kernel files to the build and install trees alike. (That is if one does not wish the executable to rely on the source tree, which is not recommended.) When building with CMake specifically, one can instruct the build system to copy this file both for development builds and installs.
 
 We'll be using these functions, as per the docs.
 
@@ -45,12 +45,13 @@ install(
 )
 ```
 
-We can then load the kernel file simply by:
+Unfortunately we can't obtain the path to the currently running executable without resorting to platform-specific APIs. Such functionality is provided for eg. by the OpenCL SDK utility library by the function `std::filesystem::path cl::util::get_exe_path()` for all supported operating systems.
 
 ```c++
-std::ifstream source_file{ "./saxpy" };
+auto kernel_path = cl::util::get_exe_path().parent_path().append("saxpy.cl");
+std::ifstream source_file{ kernel_path };
 if (!source_file.is_open())
-    throw std::runtime_error{ std::string{ "Cannot open kernel source: " } + "./saxpy" };
+    throw std::runtime_error{ std::string{ "Cannot open kernel source: " } + kernel_path.generic_string() };
 
 cl::Program program{ context,
                      std::string{ std::istreambuf_iterator<char>{ source_file },
@@ -59,6 +60,8 @@ cl::Program program{ context,
 };
 ```
 
-When locating the kernel file for reading in this fashion, one is restricted to being able to run the code only from the same directory. Depending on your workflow or use-case, this may or may not be acceptable.
+When locating the kernel file for reading in this fashion, one is free to relocate the entire build or install tree as needed.
+
+When building libraries with kernels as components, without surfacing a root path for kernel search, there is an implicit requirement imposed on the build / install trees of downstreams linking to the library. (For eg. the relative path of the kernel files and the final executable consuming the library have to be the same as the kernels and the unit tests of said library.) Depending on your workflow or use-case, this may or may not be acceptable.
 
 _(Note: the author is aware of the performance implication of using the filestream iterator adapters in constructors as opposed to raw seeking and pre-allocating in file handles, however kernel files more often than not are small enough to consider chosing simplicity over performance.)_
