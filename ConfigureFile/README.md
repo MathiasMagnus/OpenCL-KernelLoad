@@ -53,4 +53,6 @@ cl::Program program{ context,
 };
 ```
 
+When locating the kernel file for reading in this fashion, one is restricted to relying on the kernel files inside the source tree. Defining different kernel locations for development builds and installations is not possible. Depending on your workflow or use-case, this may or may not be acceptable.
+
 _(Note: the author is aware of the performance implication of using the filestream iterator adapters in constructors as opposed to raw seeking and pre-allocating in file handles, however kernel files more often than not are small enough to consider chosing simplicity over performance.)_
